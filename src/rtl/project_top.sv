@@ -198,7 +198,7 @@ module project_top
     //-----------------------------------------------------------------------------------------------------
     // From here down is the Snapshot debugger
     //-----------------------------------------------------------------------------------------------------
-    localparam integer MONITOR_WIDTH = 41;
+    localparam integer MONITOR_WIDTH = 256;
     localparam integer MONITOR_DEPTH = 1024; 
     
     // The Snapshot IP allows a maximum of 40 triggers.
