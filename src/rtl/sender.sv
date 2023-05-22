@@ -1,7 +1,7 @@
 //=========================================================================================================
 // sender.sv
 //
-// This module continuously sends sequential 64-bit values to the receiver module
+// This module continuously sends sequential 64-bit values to the "simulated ethernet" module
 //=========================================================================================================
 
 `include "nap_interfaces.svh"

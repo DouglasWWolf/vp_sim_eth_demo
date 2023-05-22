@@ -1,8 +1,8 @@
 //=========================================================================================================
-// recver.sv
+// ethnet.sv
 //
-// This module waits for messages to data to arrive via the NoC and drives the lower 8-bits of those
-// messages to the LEDs.
+// This module waits for messages to data to arrive via the NoC and sends those messeges back to the
+// sender.  This simulates a QSFP/Ethernet port with a loopback-connector inserted.
 //
 // A valid data-transfer (with the NAP) occurs on any clock cycle in which "ready" and "valid" are both
 // high.
@@ -11,7 +11,7 @@
 `include "nap_interfaces.svh"
 
 
-module recver
+module ethnet
 (
     input wire          clk,
     input wire          resetn,

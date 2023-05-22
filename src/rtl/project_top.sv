@@ -7,8 +7,8 @@
 //
 // In this example:
 //
-// The "sender" module is responsible for periodically sending 8-bit wide messages to the "recver" module.
-// The "recver" module will use those 8-bit messages to drive the LEDs on the VectorPath.
+// The "sender" module is responsible for periodically sending 8-bit wide messages to the "ethnet" module.
+// The "ethnet" module will use those 8-bit messages to drive the LEDs on the VectorPath.
 //
 // Unlike AXI, when two modules communicate via "Data Streaming", their NAPs (i.e., Network Access Points) 
 // must be either in the same vertical column of the NoC or in the same horizontal row of the Noc.  In 
@@ -106,20 +106,20 @@ module project_top
     localparam NAP_V_DATA_WIDTH = `ACX_NAP_VERTICAL_DATA_WIDTH;
     localparam NAP_ADDR_WIDTH   = `ACX_NAP_DS_ADDR_WIDTH;
 
-    // Both our "sender" and "recver" modules are going to be connect to column 1 of the NOC
+    // Both our "sender" and "ethnet" modules are going to be connect to column 1 of the NOC
     localparam NOC_COL= 1;
     
     // Define the NoC columns where our sender and receiver modules tie into the network
     localparam NOC_ROW_SEND = 1;
-    localparam NOC_ROW_RECV = 2;
+    localparam NOC_ROW_ENET = 2;
 
 
     //-----------------------------------------------------------------------------------------------------
     // Each RTL module that needs to send/receive data on the NoC will connect to the NoC via a NAP - a 
     // "Network Access Point".   Our simple example here will have two modules communicating via the NoC,
-    // a "sender" module, and a "receiver" module.
+    // a "sender" module, and a simulated-ethernet "ethnet" module.
     //
-    // In the lines below, we are creating the tDATA_STREAM interfaces that our "sender" and "recver" 
+    // In the lines below, we are creating the tDATA_STREAM interfaces that our "sender" and "ethnet" 
     // modules will use to communicate with their respective NAPs.
     //-----------------------------------------------------------------------------------------------------
 
@@ -127,9 +127,9 @@ module project_top
     t_DATA_STREAM #(.DATA_WIDTH (NAP_H_DATA_WIDTH), .ADDR_WIDTH (NAP_ADDR_WIDTH)) iface_sender_rx();
     t_DATA_STREAM #(.DATA_WIDTH (NAP_H_DATA_WIDTH), .ADDR_WIDTH (NAP_ADDR_WIDTH)) iface_sender_tx();
 
-    // Create the data-stream interfaces that our "recver" module will use to talk to its NAP
-    t_DATA_STREAM #(.DATA_WIDTH (NAP_H_DATA_WIDTH), .ADDR_WIDTH (NAP_ADDR_WIDTH)) iface_recver_rx();
-    t_DATA_STREAM #(.DATA_WIDTH (NAP_H_DATA_WIDTH), .ADDR_WIDTH (NAP_ADDR_WIDTH)) iface_recver_tx();
+    // Create the data-stream interfaces that our simulated ethernet module will use to talk to its NAP
+    t_DATA_STREAM #(.DATA_WIDTH (NAP_H_DATA_WIDTH), .ADDR_WIDTH (NAP_ADDR_WIDTH)) iface_ethnet_rx();
+    t_DATA_STREAM #(.DATA_WIDTH (NAP_H_DATA_WIDTH), .ADDR_WIDTH (NAP_ADDR_WIDTH)) iface_ethnet_tx();
 
 
     //-----------------------------------------------------------------------------------------------------
@@ -150,19 +150,19 @@ module project_top
 
 
     //-----------------------------------------------------------------------------------------------------
-    // Instantiate the NAP that the "recver" module will use to talk over the NoC
+    // Instantiate the NAP that the simulated ethernet module will use to talk over the NoC
     //-----------------------------------------------------------------------------------------------------
     nap_vertical_wrapper  #
     (
-        .ROW        (NOC_ROW_RECV),
+        .ROW        (NOC_ROW_ENET),
         .COLUMN     (NOC_COL)        
     )
-    nap_recver
+    nap_ethnet
     (
         .i_clk      (i_clk),
         .i_reset_n  (resetn),
-        .if_ds_tx   (iface_recver_tx),
-        .if_ds_rx   (iface_recver_rx)
+        .if_ds_tx   (iface_ethnet_tx),
+        .if_ds_rx   (iface_ethnet_rx)
     );
     
 
@@ -177,19 +177,19 @@ module project_top
         .resetn     (resetn),
         .tx         (iface_sender_tx),
         .rx         (iface_sender_rx),
-        .dest_addr  (NOC_ROW_RECV)
+        .dest_addr  (NOC_ROW_ENET)
     );
 
+
     //-----------------------------------------------------------------------------------------------------
-    // Declare an instance of our "recver" module.  Here we both connect the object to its NAP and
-    // provide the object with the output lines to the VectorPath LEDs
+    // Declare an instance of our "simulated ethernet" module.  
     //-----------------------------------------------------------------------------------------------------
-    recver recvr_object
+    ethnet recvr_object
     (
         .clk        (i_clk),
         .resetn     (resetn),
-        .rx         (iface_recver_rx),
-        .tx         (iface_recver_tx),
+        .rx         (iface_ethnet_rx),
+        .tx         (iface_ethnet_tx),
         .leds       (led_l)
     );
 
@@ -229,12 +229,12 @@ module project_top
         iface_sender_rx.ready,
         iface_sender_rx.data[63:0],
 
-        iface_recver_rx.valid,
-        iface_recver_rx.sop,
-        iface_recver_rx.eop,
-        iface_recver_rx.ready,
-        iface_recver_rx.data[63:0],
-        iface_recver_rx.addr
+        iface_ethnet_rx.valid,
+        iface_ethnet_rx.sop,
+        iface_ethnet_rx.eop,
+        iface_ethnet_rx.ready,
+        iface_ethnet_rx.data[63:0],
+        iface_ethnet_rx.addr
     };
 
     // Declare the various stimuli that can arrive from the GUI
